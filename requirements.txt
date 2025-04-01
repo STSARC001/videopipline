@@ -1,0 +1,30 @@
+# AI Models & Generation
+transformers>=4.30.0
+torch>=2.0.0
+diffusers>=0.18.0
+accelerate>=0.20.0
+controlnet_aux>=0.0.6
+coqui-tts>=0.10.0  # For TTS
+nltk>=3.8.1        # For text processing
+
+# Animation
+opencv-python>=4.7.0
+numpy>=1.24.0
+moviepy>=1.0.3
+scipy>=1.10.0
+pillow>=9.5.0
+
+# Video Processing
+ffmpeg-python>=0.2.0
+av>=10.0.0
+
+# Google Drive Integration
+google-api-python-client>=2.80.0
+google-auth-httplib2>=0.1.0
+google-auth-oauthlib>=1.0.0
+
+# Utilities
+tqdm>=4.65.0
+python-dotenv>=1.0.0
+pyyaml>=6.0
+requests>=2.30.0
