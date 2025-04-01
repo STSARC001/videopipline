@@ -117,25 +117,44 @@ To run this pipeline on Google Colab, follow these steps:
    setup_colab_drive_auth()
    ```
 
-5. Mount Google Drive to save output:
+5. Install NLTK resources (important to prevent errors):
+   ```python
+   import nltk
+   nltk.download('punkt')
+   
+   # Fix for punkt_tab error
+   import ssl
+   try:
+       _create_unverified_https_context = ssl._create_unverified_context
+   except AttributeError:
+       pass
+   else:
+       ssl._create_default_https_context = _create_unverified_https_context
+       
+   # Download additional required NLTK resources
+   nltk.download('punkt_tab')
+   print("✅ NLTK resources downloaded")
+   ```
+
+6. Mount Google Drive to save output:
    ```
    from google.colab import drive
    drive.mount('/content/drive')
    ```
 
-6. Create a `.env` file with your configuration:
+7. Create a `.env` file with your configuration:
    ```
    %%writefile .env
    DRIVE_FOLDER_NAME=YouTubeAutomation
    OUTPUT_DIR=/content/drive/MyDrive/youtube_automation_output
    ```
 
-7. Run the pipeline:
+8. Run the pipeline:
    ```
    !python main.py --genre SciFi --content_type story --upload
    ```
 
-8. Access your generated content in the specified Google Drive folder.
+9. Access your generated content in the specified Google Drive folder.
 
 **Note**: Colab provides free GPU acceleration which is perfect for running the AI models in this pipeline. Select Runtime > Change runtime type > Hardware accelerator > GPU for best performance.
 
