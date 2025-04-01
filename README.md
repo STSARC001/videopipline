@@ -84,8 +84,8 @@ To run this pipeline on Google Colab, follow these steps:
 
 2. Clone the repository in a Colab cell:
    ```
-   !git clone https://github.com/yourusername/youtube-automation-pipeline.git
-   %cd youtube-automation-pipeline
+   !git clone https://github.com/STSARC001/videopipline.git
+   %cd videopipline
    ```
 
 3. Install the required dependencies:
@@ -93,10 +93,28 @@ To run this pipeline on Google Colab, follow these steps:
    !pip install -r requirements.txt
    ```
 
-4. Upload your Google Drive credentials:
-   ```
-   from google.colab import files
-   uploaded = files.upload()  # Upload your credentials.json file
+4. Use the simplified Google Drive authentication for Colab:
+   ```python
+   # Configure Google Drive authentication for Colab
+   def setup_colab_drive_auth():
+       """Set up Google Drive authentication for Colab"""
+       from google.colab import auth
+       from googleapiclient.discovery import build
+
+       # Authenticate with Google
+       auth.authenticate_user()
+
+       # Build the Drive service directly
+       drive_service = build('drive', 'v3')
+
+       # Patch the GoogleDriveStorage class
+       import modules.storage as storage
+       storage.GoogleDriveStorage._authenticate = lambda self: drive_service
+
+       print("✅ Google Drive authentication configured for Colab")
+
+   # Run the function
+   setup_colab_drive_auth()
    ```
 
 5. Mount Google Drive to save output:
@@ -108,7 +126,6 @@ To run this pipeline on Google Colab, follow these steps:
 6. Create a `.env` file with your configuration:
    ```
    %%writefile .env
-   GOOGLE_CREDENTIALS_FILE=credentials.json
    DRIVE_FOLDER_NAME=YouTubeAutomation
    OUTPUT_DIR=/content/drive/MyDrive/youtube_automation_output
    ```
