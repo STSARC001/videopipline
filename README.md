@@ -99,6 +99,9 @@ To run this pipeline on Google Colab, follow these steps:
    !pip uninstall -y numpy
    !pip install numpy==1.24.3
    
+   # Install xformers for memory-efficient attention in Stable Diffusion
+   !pip install xformers
+   
    # Restart runtime (run this cell, then continue from the next cell after runtime restarts)
    import os
    os.kill(os.getpid(), 9)
