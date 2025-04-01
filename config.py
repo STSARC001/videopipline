@@ -27,6 +27,13 @@ MODELS = {
         "top_p": float(os.getenv("LLM_TOP_P", 0.9)),
     },
     
+    # Gemini API configs
+    "gemini": {
+        "api_key": os.getenv("GEMINI_API_KEY", "AIzaSyBs_YOa0m9dAhDKw45esHSlXbZ3WIDP6MI"),  # Default key from example
+        "model_name": os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-pro"),  # For text generation
+        "image_model": os.getenv("GEMINI_IMAGE_MODEL", "gemini-2.0-flash-exp-image-generation"),  # For image generation
+    },
+    
     # Stable Diffusion configs
     "stable_diffusion": {
         "model_id": os.getenv("SD_MODEL_ID", "runwayml/stable-diffusion-v1-5"),
@@ -74,6 +81,8 @@ CONTENT = {
     "default_genre": os.getenv("DEFAULT_GENRE", "SciFi"),
     "content_type": os.getenv("CONTENT_TYPE", "story"),  # story, animation, news, comedy
     "video_length": int(os.getenv("VIDEO_LENGTH", 60)),  # Target video length in seconds
+    "use_gemini": os.getenv("USE_GEMINI", "True").lower() == "true",  # Whether to use Gemini API instead of separate models
+    "visual_style": os.getenv("VISUAL_STYLE", "3d cartoon animation style"),  # Visual style for image generation
 }
 
 # Logging Configuration

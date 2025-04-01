@@ -13,6 +13,7 @@ import time
 
 from modules.prompt_generator import PromptGenerator
 from modules.image_generator import ImageGenerator
+from modules.gemini_content_generator import GeminiContentGenerator
 from modules.animator import Animator
 from modules.voice_generator import VoiceGenerator
 from modules.video_compiler import VideoCompiler
@@ -65,6 +66,24 @@ def parse_arguments():
         help="Upload to Google Drive after completion"
     )
     parser.add_argument(
+        "--use_gemini", 
+        action="store_true",
+        default=config.CONTENT["use_gemini"],
+        help="Use Gemini API for integrated story and image generation"
+    )
+    parser.add_argument(
+        "--custom_prompt", 
+        type=str,
+        default=None,
+        help="Custom prompt for Gemini generation (e.g., 'Generate a story about a baby goat...')"
+    )
+    parser.add_argument(
+        "--visual_style", 
+        type=str,
+        default=config.CONTENT["visual_style"],
+        help="Visual style for image generation (e.g., '3d cartoon animation')"
+    )
+    parser.add_argument(
         "--skip_steps", 
         nargs="+",
         choices=["prompt", "image", "animation", "voice", "video", "upload"],
@@ -92,6 +111,8 @@ def main():
     
     logger.info(f"Starting YouTube Automation Pipeline (ID: {run_id})")
     logger.info(f"Genre: {args.genre}, Content Type: {args.content_type}")
+    if args.use_gemini:
+        logger.info("Using Gemini API for integrated story and image generation")
     
     start_time = time.time()
     pipeline_data = {
@@ -105,25 +126,44 @@ def main():
     skip_steps = args.skip_steps or []
     
     try:
-        # Step 1: Generate prompts and script
-        if "prompt" not in skip_steps:
-            logger.info("Step 1: Generating prompts and script")
-            prompt_generator = PromptGenerator()
-            pipeline_data.update(prompt_generator.generate(
+        # Step 1 & 2: Generate content with Gemini (combines prompt and image generation)
+        if args.use_gemini and "prompt" not in skip_steps and "image" not in skip_steps:
+            logger.info("Step 1+2: Generating story and images with Gemini")
+            gemini_generator = GeminiContentGenerator()
+            pipeline_data.update(gemini_generator.generate(
                 genre=args.genre,
                 content_type=args.content_type,
-                output_dir=output_dir
+                output_dir=output_dir,
+                custom_prompt=args.custom_prompt,
+                visual_style=args.visual_style
             ))
-        
-        # Step 2: Generate images based on script
-        if "image" not in skip_steps:
-            logger.info("Step 2: Generating images")
-            image_generator = ImageGenerator()
-            pipeline_data.update(image_generator.generate(
-                script=pipeline_data.get("script", ""),
-                scene_descriptions=pipeline_data.get("scene_descriptions", []),
-                output_dir=output_dir
-            ))
+            
+            # Since Gemini handles both script and images, we need to set the images list expected by animator
+            if "image_paths" in pipeline_data:
+                pipeline_data["images"] = pipeline_data["image_paths"]
+            
+            # Skip the separate prompt and image generation steps
+            skip_steps.extend(["prompt", "image"])
+        else:
+            # Step 1: Generate prompts and script using traditional pipeline
+            if "prompt" not in skip_steps:
+                logger.info("Step 1: Generating prompts and script")
+                prompt_generator = PromptGenerator()
+                pipeline_data.update(prompt_generator.generate(
+                    genre=args.genre,
+                    content_type=args.content_type,
+                    output_dir=output_dir
+                ))
+            
+            # Step 2: Generate images based on script using traditional pipeline
+            if "image" not in skip_steps:
+                logger.info("Step 2: Generating images")
+                image_generator = ImageGenerator()
+                pipeline_data.update(image_generator.generate(
+                    script=pipeline_data.get("script", ""),
+                    scene_descriptions=pipeline_data.get("scene_descriptions", []),
+                    output_dir=output_dir
+                ))
         
         # Step 3: Animate the images
         if "animation" not in skip_steps:

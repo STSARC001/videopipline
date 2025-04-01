@@ -6,6 +6,12 @@ accelerate>=0.20.0
 controlnet_aux>=0.0.6
 coqui-tts>=0.10.0  # For TTS
 nltk>=3.8.1        # For text processing
+google-generativeai>=0.3.0
+google-api-core>=2.11.0
+google-cloud-core>=2.3.0
+google-cloud-storage>=2.5.0
+google-auth>=2.15.0
+googleapis-common-protos>=1.57.0
 
 # Animation
 opencv-python>=4.7.0
