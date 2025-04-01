@@ -8,7 +8,7 @@ import subprocess
 import json
 from pathlib import Path
 import numpy as np
-from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_videoclips, CompositeVideoClip
+from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_videoclips, CompositeVideoClip, ColorClip, VideoClip
 from moviepy.video.fx import all as vfx
 from tqdm import tqdm
 import config
@@ -44,39 +44,45 @@ class VideoCompiler:
         Returns:
             composite_clip: Combined clip with transition
         """
+        clip1_duration = clip1.duration
+        
         if transition_type == "fade":
-            # Create a crossfade transition
+            # Crossfade between clips
             clip1 = clip1.crossfadeout(duration)
             clip2 = clip2.crossfadein(duration)
             
             # Overlap the clips
-            clip1_end = clip1.end - duration
-            composite_clip = CompositeVideoClip([
-                clip1.set_end(clip1.duration),
+            clip1_end = clip1_duration - duration
+            composite_clip = concatenate_videoclips([
+                clip1.set_end(clip1_duration),
                 clip2.set_start(clip1_end)
-            ])
+            ], method="compose")
             
             return composite_clip
-        
+            
         elif transition_type == "wipe":
-            # Create a wipe transition
-            clip1_duration = clip1.duration
+            # Create a clip with mask for the second clip
             clip2_with_mask = clip2.copy()
             
             # Create a mask for the wipe
-            def make_wipe_mask(t):
-                """Create a moving wipe mask"""
+            mask_clip = ColorClip(clip2.size, col=[0, 0, 0], duration=duration)
+            
+            # Generate mask with animation
+            def make_frame(t):
+                """Create a moving wipe mask frame"""
                 progress = t / duration
-                if progress > 1:
-                    return np.ones(clip2.size)
-                mask = np.zeros(clip2.size)
+                frame = np.zeros((clip2.size[1], clip2.size[0]), dtype=np.uint8)
                 width = clip2.size[0]
                 mask_position = int(width * progress)
-                mask[:, :mask_position] = 1
-                return mask
+                frame[:, :mask_position] = 255
+                return frame
             
-            # Apply the mask for the duration of the transition
-            clip2_with_mask = clip2_with_mask.set_mask(lambda t: make_wipe_mask(t))
+            # Create an animated mask clip
+            mask_clip = VideoClip(make_frame, duration=duration)
+            mask_clip.ismask = True  # Explicitly set ismask attribute
+            
+            # Apply the mask
+            clip2_with_mask = clip2_with_mask.set_mask(mask_clip)
             
             # Overlap the clips
             clip1_end = clip1_duration - duration
@@ -120,7 +126,12 @@ class VideoCompiler:
                         return 5 * (1 - t / 2)
                     return 0
                 
-                clip = clip.fx(vfx.blur, blur_factor)
+                # Using gblur instead of blur (which doesn't exist)
+                if hasattr(vfx, 'gblur'):
+                    clip = clip.fx(vfx.gblur, blur_factor)
+                else:
+                    # Fallback to no effect if blur isn't available
+                    self.logger.warning("gblur effect not available in this version of MoviePy")
                 return clip
             
             elif effect_type == "color_enhance":
