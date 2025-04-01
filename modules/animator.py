@@ -36,7 +36,7 @@ class Animator:
     
     def _create_basic_animation(self, image, duration, output_path):
         """
-        Create a basic animation from a static image with subtle movements
+        Create a basic animation from a single image with subtle movement effects.
         
         Args:
             image: PIL image to animate
@@ -48,9 +48,40 @@ class Animator:
         """
         self.logger.info(f"Creating basic animation for {duration:.2f} seconds")
         
-        # Convert PIL image to numpy array
-        img_np = np.array(image)
-        height, width = img_np.shape[:2]
+        # Add robust error handling for image loading
+        try:
+            # Check if image is a string (path) or PIL Image
+            if isinstance(image, str):
+                self.logger.info(f"Loading image from path: {image}")
+                # Make sure the file exists
+                if not os.path.exists(image):
+                    self.logger.error(f"Image file does not exist: {image}")
+                    # Create a fallback colored image
+                    fallback_img = Image.new('RGB', (640, 480), color = (73, 109, 137))
+                    img_np = np.array(fallback_img)
+                else:
+                    # Try to load the image
+                    image = Image.open(image)
+                    img_np = np.array(image)
+            else:
+                # Convert PIL image to numpy array
+                img_np = np.array(image)
+            
+            # Verify the image has valid dimensions
+            if img_np.size == 0:
+                self.logger.error("Empty image array detected, creating fallback image")
+                fallback_img = Image.new('RGB', (640, 480), color = (73, 109, 137))
+                img_np = np.array(fallback_img)
+                
+            self.logger.info(f"Image shape: {img_np.shape}")
+            height, width = img_np.shape[:2]
+            
+        except Exception as e:
+            self.logger.error(f"Error processing image: {str(e)}")
+            # Create a fallback colored image
+            fallback_img = Image.new('RGB', (640, 480), color = (73, 109, 137))
+            img_np = np.array(fallback_img)
+            height, width = img_np.shape[:2]
         
         # Calculate number of frames based on fps and duration
         num_frames = int(self.fps * duration)
